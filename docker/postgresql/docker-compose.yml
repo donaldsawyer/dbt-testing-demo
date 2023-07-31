@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  pgdatabase:
+    image: "postgres"
+    container_name: local_pgdb
+    restart: always
+    ports:
+      - "54320:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "ITsC0mpl1cat3d"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./db/init_db.sql:/docker-entrypoint-initdb.d/10_init_db.sql
+      - ./db/carrier_codes.csv:/data/carrier_codes.csv
+      - ./db/airport_codes.csv:/data/airport_codes.csv
+      - ./db/airport_data:/data/airport_data
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4:7.5
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+    volumes:
+      - /var/lib/pgadmin
+    depends_on:
+      - pgdatabase
+volumes:
+  db:
+    driver: local
+    
