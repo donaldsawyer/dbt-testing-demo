@@ -43,5 +43,95 @@ models:
         # tests for year ranges of 4 digits, 9999
       - name: originalDescription
         data_type: character varying (128)
-
+  - name: slv_flight
+    config: 
+      contract:
+        enforced: true
+    columns:
+      - name: year
+        data_type: smallint
+        tests:
+          - not_null
+          # tests: value list
+      - name: month
+        data_type: smallint
+        tests:
+          - not_null
+      - name: day_of_month
+        data_type: smallint
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:  # this can be made for specific months with 30, 31, 28/29 days
+              min_value: 1
+              max_value: 31
+              # row_condition: "id is not null"
+      - name: fl_date
+        data_type: character varying (10)
+        tests:
+          - not_null
+          # Test for concatenation of year/month/day?
+      - name: unique_carrier
+        data_type: character varying (3)
+        tests:
+          - not_null
+      - name: airline_id
+        data_type: integer
+        tests:
+          - not_null
+      - name: carrier
+        data_type: character varying (3)
+        tests:
+          - not_null
+      - name: tail_num
+        data_type: character varying (10)
+        tests:
+          - not_null
+      - name: fl_num
+        data_type: integer
+        tests:
+          - not_null
+      - name: origin_airport_id
+        data_type: integer
+        tests:
+          - not_null
+      - name: origin_airport_sequence_id
+        data_type: integer
+        tests:
+          - not_null
+      - name: origin
+        data_type: character varying (3)
+        tests:
+          - not_null
+      - name: dest_airport_id
+        data_type: integer
+        tests:
+          - not_null
+      - name: dest_airport_seq_id
+        data_type: integer
+        tests:
+          - not_null
+      - name: dest
+        data_type: character varying (3)
+        tests:
+          - not_null
+      - name: dep_delay
+        data_type: integer
+        tests:
+          - not_null
+      - name: arr_delay
+        data_type: integer
+        tests:
+          - not_null
+      - name: cancelled
+        data_type: boolean # TEST SOURCE TO MAKE SURE IT'S ONLY 1 OR 0
+        tests:
+          - not_null
+      - name: diverted
+        data_type: boolean # TEST SOURCE TO MAKE SURE IT'S ONLY 1 OR 0
+        tests:
+          - not_null
+      - name: distance
+        data_type: integer
+        tests:
+          - not_null
 
