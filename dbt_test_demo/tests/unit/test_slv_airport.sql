@@ -15,6 +15,7 @@
         '05a'   | 'city05a, COUNTRY: 05a airport'
         '06a'   | 'city06a, AL:'
         '07a'   | 'city07a, Province, Country, Continent: 07a airport'
+        'ZZZ'   | 'this value should not matter'
     {% endcall %}
 
     {% call dbt_unit_testing.expect() %}
