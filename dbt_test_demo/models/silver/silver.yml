@@ -5,6 +5,10 @@ models:
     config:
       contract:
         enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'airport_code')
+            compare_row_condition: "code != 'ZZZ'"
     columns:
       - name: code
         data_type: character varying(8)
@@ -26,6 +30,9 @@ models:
     config: 
       contract:
         enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'carrier_code')
     columns:
       - name: code
         data_type: character varying(8)
@@ -44,6 +51,14 @@ models:
       - name: originalDescription
         data_type: character varying (128)
   - name: slv_flight
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          compare_model: ref("flight_data")
+          # group_by: [col1, col2] # (Optional)
+          # compare_group_by: [col1, col2] # (Optional)
+          # factor: 1 # (Optional)
+          # row_condition: "id is not null" # (Optional)
+          # compare_row_condition: "id is not null" # (Optional)
     config: 
       contract:
         enforced: true
@@ -57,24 +72,32 @@ models:
         data_type: smallint
         tests:
           - not_null
-      - name: day_of_month
+      - name: dayOfMonth
         data_type: smallint
         tests:
           - not_null
           - dbt_expectations.expect_column_values_to_be_between:  # this can be made for specific months with 30, 31, 28/29 days
               min_value: 1
+              max_value: 29
+              row_condition: "month = 2"
+          - dbt_expectations.expect_column_values_to_be_between:  # this can be made for specific months with 30, 31, 28/29 days
+              min_value: 1
+              max_value: 30
+              row_condition: "month IN (4, 6, 9, 11)"
+          - dbt_expectations.expect_column_values_to_be_between:  # this can be made for specific months with 30, 31, 28/29 days
+              min_value: 1
               max_value: 31
-              # row_condition: "id is not null"
-      - name: fl_date
+              row_condition: "month IN (1, 3, 5, 7, 8, 10, 12)"
+      - name: flightDate
         data_type: character varying (10)
         tests:
           - not_null
           # Test for concatenation of year/month/day?
-      - name: unique_carrier
+      - name: uniqueCarrier
         data_type: character varying (3)
         tests:
           - not_null
-      - name: airline_id
+      - name: airlineId
         data_type: integer
         tests:
           - not_null
@@ -82,19 +105,22 @@ models:
         data_type: character varying (3)
         tests:
           - not_null
-      - name: tail_num
+          - relationships:
+              to: ref('slv_carrier')
+              field: code
+      - name: tailNumber
         data_type: character varying (10)
         tests:
           - not_null
-      - name: fl_num
+      - name: flightNumber
         data_type: integer
         tests:
           - not_null
-      - name: origin_airport_id
+      - name: originAirportId
         data_type: integer
         tests:
           - not_null
-      - name: origin_airport_sequence_id
+      - name: originAirportSequenceId
         data_type: integer
         tests:
           - not_null
@@ -102,35 +128,45 @@ models:
         data_type: character varying (3)
         tests:
           - not_null
-      - name: dest_airport_id
+          - relationships:
+              to: ref('slv_airport')
+              field: code
+      - name: destinationAirportId
         data_type: integer
         tests:
           - not_null
-      - name: dest_airport_seq_id
+      - name: destinationAirportSequenceId
         data_type: integer
         tests:
           - not_null
-      - name: dest
+      - name: destination
         data_type: character varying (3)
         tests:
           - not_null
-      - name: dep_delay
+          - relationships:
+              to: ref('slv_airport')
+              field: code
+      - name: departureDelayMinutes
+        data_type: integer
+        tests: # DIFFERENT NULL TEST - CONDITIONAL
+          # - not_null
+          - dbt_expectations.expect_column_values_to_not_be_null:
+              row_condition: "cancelledFlag = FALSE AND divertedFlag = FALSE"
+      - name: arrivalDelayMinutes
         data_type: integer
         tests:
-          - not_null
-      - name: arr_delay
-        data_type: integer
-        tests:
-          - not_null
-      - name: cancelled
+          # - not_null
+          - dbt_expectations.expect_column_values_to_not_be_null:
+              row_condition: "cancelledFlag = FALSE AND divertedFlag = FALSE"
+      - name: cancelledFlag
         data_type: boolean # TEST SOURCE TO MAKE SURE IT'S ONLY 1 OR 0
         tests:
           - not_null
-      - name: diverted
+      - name: divertedFlag
         data_type: boolean # TEST SOURCE TO MAKE SURE IT'S ONLY 1 OR 0
         tests:
           - not_null
-      - name: distance
+      - name: distanceMiles
         data_type: integer
         tests:
           - not_null

@@ -5,5 +5,35 @@ sources:
     schema: 'bronze'
     tables:
       - name: airport_code
+        columns:
+          - name: code
+            tests:
+              - not_null
+              - unique
+              - dbt_expectations.expect_column_to_exist
+          - name: description
+            tests:
+              - not_null
+              - dbt_expectations.expect_column_to_exist
       - name: carrier_code
+        columns:
+          - name: code
+            tests: 
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+          - name: description
+            tests:
+              - not_null
+              - dbt_expectations.expect_column_to_exist
       - name: flight_data
+        columns:
+          - name: cancelled
+            tests:
+              - accepted_values:
+                  values: [0, 1]
+              - dbt_expectations.expect_column_to_exist
+          - name: diverted
+            tests:
+              - accepted_values:
+                  values: [0, 1]
+              - dbt_expectations.expect_column_to_exist
