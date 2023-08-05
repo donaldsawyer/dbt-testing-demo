@@ -170,4 +170,3 @@ models:
         data_type: integer
         tests:
           - not_null
-
