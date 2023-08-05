@@ -1,5 +1,11 @@
 {{ config(materialized='view', alias='airport')}}
 
+-- BAD DATA????
+-- select a.code, a.state_country, length(a.state_country) - length(replace(a.state_country, ',', '')) as comma_count
+-- from silver.airport a
+-- -- join silver.flight fd on a.code = fd.origin or a.code = fd.destination
+-- where length(a.state_country) - length(replace(a.state_country, ',', '')) > 0
+
 with locNameCTE as (
     SELECT 
         code,

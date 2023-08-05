@@ -39,12 +39,12 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   dbt_test_demo:
     bronze:
-      +materialized: view
+      +materialized: table
       +schema: bronze
     silver:
-      +materialized: view
+      +materialized: table
       +schema: silver
     gold:
-      +materialized: table
+      +materialized: view
       +schema: gold
 
