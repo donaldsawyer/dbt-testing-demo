@@ -20,8 +20,8 @@
 SELECT
     code,
     name,
-    city,
-    state_country AS state
+    CAST(city AS CHARACTER VARYING(128)),
+    CAST(state_country AS CHARACTER VARYING (32)) AS state
 FROM {{ ref('slv_airport')}}
 WHERE 
     LENGTH(state_country) = 2
