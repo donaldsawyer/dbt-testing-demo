@@ -6,9 +6,9 @@
 
 -- 05c: is this an error, or is this valid?  That's the question!
 
-{% call dbt_unit_testing.test('slv_carrier', 'validates parsing logic for carrier code data') %}
+{% call dbt_unit_testing.test('gld_carrier', 'validates parsing logic for carrier code data') %}
 
-    {% call dbt_unit_testing.mock_source ('demo_source','carrier_code') %}
+    {% call dbt_unit_testing.mock_ref("slv_carrier") %}
         CODE    | NAME                          | EFFECTIVEFROMYEAR     | EFFECTIVETOYEAR   | ORIGINALDESCRIPTION
         '01a'   | 'carrier 01a'                 | 2016                  | 2020              | 'carrier 01a (2016 - 2020)'
         '01b'   | 'carrier 01b (other)'         | 2016                  | 2020              | 'carrier 01b (other) (2016 - 2020)'
@@ -26,11 +26,11 @@
     {% endcall %}
 
     {% call dbt_unit_testing.expect() %}
-        CODE    | NAME                          | EFFECTIVEFROMYEAR     | EFFECTIVETOYEAR   | ORIGINALDESCRIPTION
-        '01a'   | 'carrier 01a'                 | 2016                  | 2020              | 'carrier 01a (2016 - 2020)'
-        '01b'   | 'carrier 01b (other)'         | 2016                  | 2020              | 'carrier 01b (other) (2016 - 2020)'
-        '02a'   | 'carrier 02a'                 | 1900                  | 2020              | 'carrier 02a ( - 2020)'
-        '03a'   | 'carrier 03a'                 | 2016                  | 9999              | 'carrier 03a (2016 - )'
-        '04a'   | 'carrier 04a'                 | 1900                  | 9999              | 'carrier 04a ( - )' 
+        CODE    | NAME                          | EFFECTIVEFROMYEAR     | EFFECTIVETOYEAR
+        '01a'   | 'carrier 01a'                 | 2016                  | 2020           
+        '01b'   | 'carrier 01b (other)'         | 2016                  | 2020           
+        '02a'   | 'carrier 02a'                 | 1900                  | 2020           
+        '03a'   | 'carrier 03a'                 | 2016                  | 9999           
+        '04a'   | 'carrier 04a'                 | 1900                  | 9999           
     {% endcall %}
 {% endcall %}
