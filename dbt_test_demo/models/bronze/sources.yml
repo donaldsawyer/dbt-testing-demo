@@ -33,6 +33,9 @@ sources:
           - name: month
             tests:
               - dbt_expectations.expect_column_to_exist
+          - name: day_of_month
+            tests:
+              - dbt_expectations.expect_column_to_exist
           - name: cancelled
             tests:
               - accepted_values:

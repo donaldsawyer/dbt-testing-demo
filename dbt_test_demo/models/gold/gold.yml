@@ -84,5 +84,23 @@ models:
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 1
               max_value: 12
+      - name: dayOfMonth
+        data_type: smallint
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 29
+              row_condition: "month = 2"
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 30
+              row_condition: "month IN (4, 6, 9, 11)"
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+              max_value: 31
+              row_condition: "month IN (1, 3, 5, 7, 8, 10, 12)"
+
+
         
       
