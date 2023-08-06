@@ -65,6 +65,17 @@ models:
           - dbt_expectations.expect_column_values_to_be_between:
               min_value: 1900
               max_value: 9999
-
+  - name: gld_flight
+    alias: flight
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: year
+        data_type: smallint
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1900
         
       

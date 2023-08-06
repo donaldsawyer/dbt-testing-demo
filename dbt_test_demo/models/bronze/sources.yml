@@ -27,6 +27,9 @@ sources:
               - dbt_expectations.expect_column_to_exist
       - name: flight_data
         columns:
+          - name: year
+            tests:
+              - dbt_expectations.expect_column_to_exist
           - name: cancelled
             tests:
               - accepted_values:
