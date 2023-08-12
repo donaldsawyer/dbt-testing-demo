@@ -45,6 +45,15 @@ sources:
           - name: carrier
             tests:
               - dbt_expectations.expect_column_to_exist
+          - name: origin
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: dest
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: dep_delay
+            tests:
+              - dbt_expectations.expect_column_to_exist
           - name: cancelled
             tests:
               - accepted_values:

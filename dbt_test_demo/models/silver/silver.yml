@@ -150,6 +150,9 @@ models:
           - relationships:
               to: ref('slv_airport')
               field: code
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+              min_value: 1
+              max_value: 3
       - name: departureDelayMinutes
         data_type: integer
         tests: # DIFFERENT NULL TEST - CONDITIONAL

@@ -117,8 +117,7 @@ models:
               field: code
           # - dbt_expectations.expect_compound_columns_to_be_unique:
           #     column_list: ["flightDate", "flightNumber", "carrierCode", "originAirportCode", "destinationAirportCode"]
-          #     ignore_row_if: "any_value_is_missing" # (Optional. Default is 'all_values_are_missing')
-          #     quote_columns: false # (Optional)
+          #     quote_columns: true
       - name: originAirportCode
         data_type: character varying (3)
         tests:
@@ -126,6 +125,15 @@ models:
           - relationships:
               to: ref('gld_airport')
               field: code
+      - name: destinationAirportCode
+        data_type: character varying (3)
+        tests:
+          - not_null
+          - relationships:
+              to: ref('gld_airport')
+              field: code
+      - name: departureDelayMinutes
+        data_type: integer
 
 
         
