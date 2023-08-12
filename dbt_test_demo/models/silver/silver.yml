@@ -92,7 +92,8 @@ models:
         data_type: character varying (10)
         tests:
           - not_null
-          # Test for concatenation of year/month/day?
+          - dbt_expectations.expect_column_value_lengths_to_equal:
+              value: 10
       - name: uniqueCarrier
         data_type: character varying (3)
         tests:

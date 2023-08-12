@@ -100,7 +100,8 @@ models:
               min_value: 1
               max_value: 31
               row_condition: "month IN (1, 3, 5, 7, 8, 10, 12)"
-
+      - name: flightDate
+        data_type: character varying (10)
 
         
       
