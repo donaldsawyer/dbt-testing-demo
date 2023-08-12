@@ -36,6 +36,12 @@ sources:
           - name: day_of_month
             tests:
               - dbt_expectations.expect_column_to_exist
+          - name: fl_date
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: carrier
+            tests:
+              - dbt_expectations.expect_column_to_exist
           - name: cancelled
             tests:
               - accepted_values:
