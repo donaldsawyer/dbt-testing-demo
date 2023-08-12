@@ -1,0 +1,22 @@
+-- SELECT unique_carrier, airline_id, carrier, tail_num, fl_num, origin_airport_id, origin_airport_sequence_id, origin, dest_airport_id, dest_airport_seq_id, dest, dep_delay, arr_delay, cancelled, diverted, distance, dummy
+-- 	FROM bronze.flight_data
+-- 	where arr_delay is null AND (cancelled = 0 and diverted = 0)
+-- 	LIMIT 100;
+	
+select * from silver.airport
+where length(substring(state_country for position(',' in state_country))) > 0
+limit 100;
+
+-- select * from silver.airport
+-- where length(split(state_country, ',')
+			 
+select a.code, a.state_country, length(a.state_country) - length(replace(a.state_country, ',', '')) as comma_count
+from silver.airport a
+-- join silver.flight fd on a.code = fd.origin or a.code = fd.destination
+where length(a.state_country) - length(replace(a.state_country, ',', '')) > 0
+
+select * from silver.airport where state_country = 'HI'
+
+select * from silver.flight where origin = 'BKH' OR destination = 'BKH'
+
+select * from silver.carrier

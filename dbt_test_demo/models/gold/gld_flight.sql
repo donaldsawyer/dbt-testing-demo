@@ -9,14 +9,16 @@ WITH flightsWithDataLimitCTE AS (
             WHEN month IN (4, 6, 9, 11) THEN 30
             WHEN month = 2 THEN 29
             ELSE NULL
-        END AS maxDaysInMonth
+        END AS maxDaysInMonth,
+        flightDate
     FROM {{ ref('slv_flight')}}
 )
 
 SELECT
     year AS year,
     month AS month,
-    dayOfMonth AS dayOfMonth
+    dayOfMonth AS dayOfMonth,
+    flightDate
 FROM flightsWithDataLimitCTE
 WHERE
     year >= 1900
