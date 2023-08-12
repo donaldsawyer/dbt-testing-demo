@@ -11,7 +11,9 @@ WITH flightsWithDataLimitCTE AS (
             ELSE NULL
         END AS maxDaysInMonth,
         flightDate,
-        carrier AS carrierCode
+        carrier AS carrierCode,
+        flightNumber,
+        origin AS originAirportCode
     FROM {{ ref('slv_flight')}}
 )
 
@@ -20,7 +22,9 @@ SELECT
     month AS month,
     dayOfMonth AS dayOfMonth,
     flightDate,
-    carrierCode
+    carrierCode,
+    flightNumber,
+    originAirportCode
 FROM flightsWithDataLimitCTE
 WHERE
     year >= 1900
