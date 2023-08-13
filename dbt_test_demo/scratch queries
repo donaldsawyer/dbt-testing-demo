@@ -20,3 +20,19 @@ select * from silver.airport where state_country = 'HI'
 select * from silver.flight where origin = 'BKH' OR destination = 'BKH'
 
 select * from silver.carrier
+
+select * from (
+	select flightDate, carrier, origin, destination, flightNumber, count(*) flightCount from silver.flight
+	group by flightDate, carrier, origin, destination, flightNumber
+) AS uniqueFlights
+where flightCount > 1-- and carrier = 'AA'
+order by flightCount desc
+limit 100
+
+select flightNumber, flightDate, carrier, origin, destination from silver.flight
+where flightDate = '2016-08-05' and carrier = 'HA' and origin = 'OGG' and destination = 'HNL'
+
+select flightDate, carrier, origin, destination, count(*) from silver.flight group by flightDate, carrier, origin, destination limit 1000
+
+
+select * from silver.flight where distanceMiles is null
