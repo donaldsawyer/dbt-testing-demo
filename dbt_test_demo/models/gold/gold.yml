@@ -142,3 +142,7 @@ models:
         data_type: boolean
         tests:
           - not_null
+      - name: divertedFlag
+        data_type: boolean
+        tests:
+          - not_null

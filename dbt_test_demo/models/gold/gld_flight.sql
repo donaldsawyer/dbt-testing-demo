@@ -17,7 +17,8 @@ WITH flightsWithDataLimitCTE AS (
         destination AS destinationAirportCode,
         departureDelayMinutes AS departureDelay,
         arrivalDelayMinutes AS arrivalDelay,
-        cancelledFlag
+        cancelledFlag,
+        divertedFlag
     FROM {{ ref('slv_flight')}}
 )
 
@@ -32,7 +33,8 @@ SELECT
     destinationAirportCode,
     departureDelay,
     arrivalDelay,
-    cancelledFlag
+    cancelledFlag,
+    divertedFlag
 FROM flightsWithDataLimitCTE
 WHERE
     year >= 1900
