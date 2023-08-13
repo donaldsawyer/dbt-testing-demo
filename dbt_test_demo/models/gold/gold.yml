@@ -138,3 +138,7 @@ models:
       - name: arrivalDelay
         descripgion: The total arrival delay for the flight, in minutes. A negative value represents an early arrival, and a NULL value represents a cancelled or diverted flight.
         data_type: integer
+      - name: cancelledFlag
+        data_type: boolean
+        tests:
+          - not_null
