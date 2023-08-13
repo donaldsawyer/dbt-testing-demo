@@ -146,3 +146,9 @@ models:
         data_type: boolean
         tests:
           - not_null
+      - name: distance
+        data_type: integer
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+                  min_value: 1

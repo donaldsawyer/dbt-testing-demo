@@ -18,7 +18,8 @@ WITH flightsWithDataLimitCTE AS (
         departureDelayMinutes AS departureDelay,
         arrivalDelayMinutes AS arrivalDelay,
         cancelledFlag,
-        divertedFlag
+        divertedFlag,
+        distanceMiles AS distance
     FROM {{ ref('slv_flight')}}
 )
 
@@ -34,7 +35,8 @@ SELECT
     departureDelay,
     arrivalDelay,
     cancelledFlag,
-    divertedFlag
+    divertedFlag,
+    distance
 FROM flightsWithDataLimitCTE
 WHERE
     year >= 1900
