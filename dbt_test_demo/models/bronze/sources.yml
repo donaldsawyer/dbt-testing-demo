@@ -54,6 +54,9 @@ sources:
           - name: dep_delay
             tests:
               - dbt_expectations.expect_column_to_exist
+          - name: arr_delay
+            tests:
+              - dbt_expectations.expect_column_to_exist
           - name: cancelled
             tests:
               - accepted_values:

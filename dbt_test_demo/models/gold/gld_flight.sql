@@ -15,7 +15,8 @@ WITH flightsWithDataLimitCTE AS (
         flightNumber,
         origin AS originAirportCode,
         destination AS destinationAirportCode,
-        departureDelayMinutes AS departureDelay
+        departureDelayMinutes AS departureDelay,
+        arrivalDelayMinutes AS arrivalDelay
     FROM {{ ref('slv_flight')}}
 )
 
@@ -28,7 +29,8 @@ SELECT
     flightNumber,
     originAirportCode,
     destinationAirportCode,
-    departureDelay
+    departureDelay,
+    arrivalDelay
 FROM flightsWithDataLimitCTE
 WHERE
     year >= 1900
