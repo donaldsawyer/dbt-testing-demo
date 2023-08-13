@@ -21,7 +21,7 @@
     {% endcall %}
 
     {% call dbt_unit_testing.expect() %}
-        YEAR    | MONTH | dayOfMonth    | flightDate    | flightNumber  | carrierCode   | originAirportCode | destinationAirportCode    | departureDelayMinutes
+        YEAR    | MONTH | dayOfMonth    | flightDate    | flightNumber  | carrierCode   | originAirportCode | destinationAirportCode    | departureDelay
         2000    | 1     | 1             | '2000-01-01'  | 100001        | 'C01'         | 'A01'             | 'A10'                     | NULL
         1900    | 12    | 31            | '1900-12-31'  | 100002        | 'C02'         | 'A02'             | 'A20'                     | 10
         2000    | 1     | 31            | '2000-01-01'  | 100003        | 'C03'         | 'A03'             | 'A30'                     | -10

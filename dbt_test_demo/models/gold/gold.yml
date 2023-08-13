@@ -132,7 +132,8 @@ models:
           - relationships:
               to: ref('gld_airport')
               field: code
-      - name: departureDelayMinutes
+      - name: departureDelay
+        descripgion: The total departure delay for the flight, in minutes. A negative value represents an early departure, and a NULL value represents a cancelled flight.
         data_type: integer
 
 
