@@ -1,0 +1,76 @@
+version: 2
+
+sources:
+  - name: demo_source
+    schema: 'bronze'
+    tables:
+      - name: airport_code
+        tags: ['precheck']
+        columns:
+          - name: code
+            tests:
+              - not_null
+              - unique
+              - dbt_expectations.expect_column_to_exist
+          - name: description
+            tests:
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+      - name: carrier_code
+        tags: ['precheck']
+        columns:
+          - name: code
+            tests: 
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+          - name: description
+            tests: 
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+      - name: flight_data
+        columns:
+          - name: year
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: month
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: day_of_month
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: fl_date
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: fl_num
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: carrier
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: origin
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: dest
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: dep_delay
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: arr_delay
+            tests:
+              - dbt_expectations.expect_column_to_exist
+          - name: cancelled
+            tests:
+              - accepted_values:
+                  values: [0, 1]
+              - dbt_expectations.expect_column_to_exist
+          - name: diverted
+            tests:
+              - accepted_values:
+                  values: [0, 1]
+              - dbt_expectations.expect_column_to_exist
+          - name: distance
+            tests:
+              - dbt_expectations.expect_column_to_exist
+              - dbt_expectations.expect_column_values_to_be_between:
+                  min_value: 1

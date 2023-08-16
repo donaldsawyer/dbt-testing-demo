@@ -38,6 +38,12 @@ clean-targets:         # directories to be removed by `dbt clean`
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 models:
   dbt_test_demo:
+    demo_bronze:
+      +tags: ['demo']
+      +schema: bronze
+    demo_silver:
+      +tags: ['demo']
+      +schema: silver
     bronze:
       +materialized: table
       +schema: bronze
