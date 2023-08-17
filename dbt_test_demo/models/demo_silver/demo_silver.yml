@@ -60,7 +60,36 @@ models:
         data_type: character varying(8)
         tests:
           - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
       - name: name
         data_type: character varying (128)
         tests:
           - not_null
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+                min_value: 1
+                strictly: false
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
+      - name: effectiveFromYear
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1900
+              max_value: 9999
+              row_condition: "effectiveFromYear IS NOT NULL AND effectiveFromYear != -1"
+              strictly: false
+      - name: effectiveToYear
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1900
+              max_value: 9999
+              row_condition: "effectiveToYear IS NOT NULL AND effectiveToYear != -1"
+              strictly: false
+      - name: originalDescription
+        data_type: character varying (128)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying

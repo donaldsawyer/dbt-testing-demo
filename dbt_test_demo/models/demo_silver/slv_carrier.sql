@@ -29,9 +29,28 @@ parsedDescriptionCTE AS (
 )
 
 SELECT 
-    CASE WHEN code = '' THEN NULL ELSE code END AS code,
-    CASE WHEN name = '' THEN NULL 
-        ELSE 
-            CASE WHEN yearRange IS NULL OR TRIM(SPLIT_PART(yearRange, '-', 1)) = yearRange THEN originalDescription ELSE name END
-        END AS name
+    CAST(CASE WHEN code = '' THEN NULL ELSE code END AS character varying (8)) AS code,
+    CAST(
+        CASE WHEN name = '' THEN NULL 
+            ELSE 
+                CASE WHEN yearRange IS NULL OR TRIM(SPLIT_PART(yearRange, '-', 1)) = yearRange THEN originalDescription ELSE name END
+        END AS CHARACTER VARYING (128))
+        AS name,
+    CAST(
+        CASE
+            WHEN yearRange IS NULL or TRIM(SPLIT_PART(yearRange, '-', 1)) = yearRange THEN -1
+            WHEN TRIM(SPLIT_PART(yearRange, '-', 1)) = ''
+            THEN NULL
+            ELSE CAST(TRIM(SPLIT_PART(yearRange, '-', 1)) AS INTEGER)
+        END
+        AS INTEGER) AS effectiveFromYear,
+    CAST(
+        CASE
+            WHEN yearRange IS NULL or TRIM(SPLIT_PART(yearRange, '-', 2)) = yearRange THEN -1
+            WHEN TRIM(SPLIT_PART(yearRange, '-', 2)) = ''
+            THEN NULL
+            ELSE CAST(TRIM(SPLIT_PART(yearRange, '-', 2)) AS INTEGER)
+            END
+        AS INTEGER) AS effectiveToYear,
+    CAST(originalDescription AS CHARACTER VARYING (128))
 FROM parsedDescriptionCTE
