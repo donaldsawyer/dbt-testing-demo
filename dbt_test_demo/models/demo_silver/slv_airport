@@ -1,0 +1,2 @@
+{{ config(materialized='view', schema='silver', alias='airport', tags=['demo'])}}
+
