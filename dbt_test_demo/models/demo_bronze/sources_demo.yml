@@ -5,5 +5,25 @@ sources:
     schema: 'bronze'
     tables:
       - name: airport_code
+        columns:
+          - name: code
+            tests:
+              - dbt_expectations.expect_column_to_exist:
+                  tags: ['precheck']
+          - name: description
+            tests:
+              - dbt_expectations.expect_column_to_exist:
+                  tags: ['precheck']
       - name: carrier_code
+        tags: ['precheck']
+        columns:
+          - name: code
+            tests: 
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+          - name: description
+            tests: 
+              - not_null
+              - dbt_expectations.expect_column_to_exist
       - name: flight_data
+      
