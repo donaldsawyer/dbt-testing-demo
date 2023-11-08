@@ -1,0 +1,13 @@
+dbt_test_demo:
+  outputs:
+    dev:
+      type: postgres
+      threads: 1
+      host: localhost
+      port: 54320
+      user: postgres
+      pass: '{{ env_var(''DBT_PASSWORD'') }}'
+      dbname: postgres
+      schema: bronze
+
+  target: dev

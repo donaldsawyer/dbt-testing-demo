@@ -1,0 +1,1011 @@
+------------------------------------------------------------
+Demo: slv_airport.sql with failed data contract
+------------------------------------------------------------
+version: 2
+
+models:
+  - name: slv_airport
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: code
+        data_type: character varying(8)
+      - name: name
+        data_type: character varying(128)
+      - name: city  # Need a test for "does not have a comma"
+        data_type: character varying(32)
+      - name: state_country
+        data_type: character varying(8) # NOTE: length is NOT ENFORCED
+
+------------------------------------------------------------
+
+{{ config(materialized='view', schema='silver', alias='airport')}}
+
+SELECT 
+    code,
+    '',-- as city,
+    '',-- AS state_country,
+    description AS name
+FROM {{ source('demo_source', 'airport_code')}}
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
+
+
+
+------------------------------------------------------------
+Demo: slv_airport.sql with corrected data contract
+------------------------------------------------------------
+{{ config(materialized='view', schema='silver', alias='airport', tags=['demo'])}}
+
+SELECT 
+    code,
+    '' as city,
+    '' AS state_country,
+    description AS name
+FROM {{ source('demo_source', 'airport_code')}}
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
+
+
+DATA CONTRACT PRE-TEST
+
+------------------------------------------------------------
+VALIDATE ENTIRE TABLE WITH COLUMN SET
+------------------------------------------------------------
+
+version: 2
+
+sources:
+  - name: demo_source
+    schema: 'bronze'
+    tags: ['precheck']
+    tables:
+      - name: airport_code
+        tests:
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              column_list: ["code", "description"]
+              transform: upper # (Optional)
+      - name: carrier_code
+      - name: flight_data
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+
+------------------------------------------------------------
+VALIDATE SPECIFIC COLUMN (WHEN ITERATING ON COLUMN)
+------------------------------------------------------------
+version: 2
+
+sources:
+  - name: demo_source
+    schema: 'bronze'
+    tables:
+      - name: airport_code
+        columns:
+          - name: code
+            tests:
+              - dbt_expectations.expect_column_to_exist:
+                  tags: ['precheck']
+          - name: description
+            tests:
+              - dbt_expectations.expect_column_to_exist:
+                  tags: ['precheck']
+      - name: carrier_code
+      - name: flight_data
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+
+
+
+
+
+
+
+------------------------------------------------------------
+DATA CONTRACT PRE-TEST - VALIDATE ENTIRE TABLE WITH COLUMN SET
+------------------------------------------------------------
+
+version: 2
+
+sources:
+  - name: demo_source
+    schema: 'bronze'
+    tags: ['precheck']
+    tables:
+      - name: airport_code
+        tests:
+          - dbt_expectations.expect_table_columns_to_match_ordered_list:
+              column_list: ["code", "description"]
+              transform: upper # (Optional)
+      - name: carrier_code
+      - name: flight_data
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+
+------------------------------------------------------------
+DATA CONTRACT PRE-TEST - VALIDATE SPECIFIC COLUMN (WHEN ITERATING ON COLUMN)
+------------------------------------------------------------
+version: 2
+
+sources:
+  - name: demo_source
+    schema: 'bronze'
+    tables:
+      - name: airport_code
+        columns:
+          - name: code
+            tests:
+              - dbt_expectations.expect_column_to_exist:
+                  tags: ['precheck']
+          - name: description
+            tests:
+              - dbt_expectations.expect_column_to_exist:
+                  tags: ['precheck']
+      - name: carrier_code
+      - name: flight_data
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+
+
+------------------------------------------------------------
+Demo: Add in data quality to config: add row count check
+------------------------------------------------------------
+
+version: 2
+
+models:
+  - name: slv_airport
+    config:
+      contract:
+        enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'airport_code')
+            compare_row_condition: "code != 'ZZZ'"
+    columns:
+      - name: code
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - unique
+      - name: name
+        data_type: character varying(128)
+        tests:
+          - not_null
+      - name: city  # Need a unit test for "description does not have a comma"
+        data_type: character varying(32)
+        tests:
+          - not_null
+      - name: state_country
+        data_type: character varying(8)
+        tests:
+          - not_null
+
+------------------------------------------------------------
+Demo: Add in data quality to config: add data type check
+------------------------------------------------------------
+
+version: 2
+
+models:
+  - name: slv_airport
+    config:
+      contract:
+        enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'airport_code')
+            compare_row_condition: "code != 'ZZZ'"
+    columns:
+      - name: code
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_values_to_not_be_in_set:
+              value_set: ['ZZZ', 'zzz']
+              quote_values: true # (Optional. Default is 'true'.)
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+                min_value: 1
+                strictly: false
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
+      - name: name
+        data_type: character varying(128)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+      - name: city  # Need a unit test for "description does not have a comma"
+        data_type: character varying(32)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+      - name: state_country
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+
+
+------------------------------------------------------------
+Demo: Add in data quality to config: add regex and length
+------------------------------------------------------------
+version: 2
+
+models:
+  - name: slv_airport
+    config:
+      contract:
+        enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'airport_code')
+            compare_row_condition: "code != 'ZZZ'"
+    columns:
+      - name: code
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_values_to_not_be_in_set:
+              value_set: ['ZZZ', 'zzz']
+              quote_values: true # (Optional. Default is 'true'.)
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+                min_value: 1
+                strictly: false
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
+      - name: name
+        data_type: character varying(128)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "[[:alnum:]]+"
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+      - name: city  # Need a unit test for "description does not have a comma"
+        data_type: character varying(32)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "[[:alnum:]]+"
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+      - name: state_country
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "[[:alnum:]]+"
+
+
+------------------------------------------------------------
+Demo: Add in happy path unit test for airport model
+------------------------------------------------------------
+
+{{
+    config(
+        tags=['unit-test', 'no-db-dependency']
+    )
+}}
+
+{% call dbt_unit_testing.test('slv_airport', 'validates parsing logic') %}
+
+    {% call dbt_unit_testing.mock_source ('demo_source','airport_code') %}
+        CODE    | Description
+        '01a'   | 'city1a, AL: 01A Airport'
+        'ZZZ'   | 'this value should not matter'
+    {% endcall %}
+
+    {% call dbt_unit_testing.expect() %}
+        CODE    | CITY      | STATE_COUNTRY                   | NAME
+        '01a'   | 'city1a'  | 'AL'                            | '01A Airport'
+    {% endcall %}
+{% endcall %}
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:unit-test
+
+------------------------------------------------------------
+Demo: Fixed Model
+------------------------------------------------------------
+
+{{ config(materialized='view', schema='silver', alias='airport', tags=['demo'])}}
+
+with locNameCTE as (
+    SELECT 
+        code,
+        TRIM(SPLIT_PART(description, ':', 1)) as location,
+        POSITION(',' IN TRIM(SPLIT_PART(description, ':', 1))) as firstCommaIndex,
+        TRIM(SPLIT_PART(description, ':', 2)) as name
+    FROM {{ source('demo_source', 'airport_code') }}
+)
+
+SELECT 
+    code,
+    CASE 
+        WHEN firstCommaIndex = 0 
+        THEN TRIM(location) 
+        ELSE 
+            CASE 
+                WHEN TRIM(SUBSTRING(location for firstCommaIndex - 1)) = '' 
+                THEN NULL 
+                ELSE TRIM(SUBSTRING(location for firstCommaIndex - 1))
+                END
+        END AS city,
+    CASE 
+        WHEN firstCommaIndex = 0
+        THEN NULL
+        ELSE
+        CASE
+            WHEN TRIM(SUBSTRING(location from firstCommaIndex + 1)) = ''
+            THEN NULL
+            ELSE TRIM(SUBSTRING(location from firstCommaIndex + 1))
+            END
+        END AS state_country,
+    CAST(
+        CASE WHEN name = '' THEN NULL ELSE name END
+        AS character varying(128)) AS name
+FROM locNameCTE
+    WHERE code != 'ZZZ'
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:unit-test
+
+
+------------------------------------------------------------
+Demo: Full set of airport tests
+------------------------------------------------------------
+
+{{
+    config(
+        tags=['unit-test', 'no-db-dependency']
+    )
+}}
+
+{% call dbt_unit_testing.test('slv_airport', 'validates parsing logic') %}
+
+    {% call dbt_unit_testing.mock_source ('demo_source','airport_code') %}
+        CODE    | Description
+        '01a'   | 'city1a, AL: 01A Airport'
+        '  02a' | ', AL: 02a airport'
+        '03a  ' | 'city03a,: 03a airport'
+        '04a'   | 'city04a: 04a airport'
+        '05a'   | 'city05a, COUNTRY: 05a airport'
+        '06a'   | 'city06a, AL:'
+        '07a'   | 'city07a, Province, Country, Continent: 07a airport'
+        'ZZZ'   | 'this value should not matter'
+    {% endcall %}
+
+    {% call dbt_unit_testing.expect() %}
+        CODE    | CITY      | STATE_COUNTRY                   | NAME
+        '01a'   | 'city1a'  | 'AL'                            | '01A Airport' 
+        '02a'   | NULL      | 'AL'                            | '02a airport'
+        '03a'   | 'city03a' | NULL                            | '03a airport'
+        '04a'   | 'city04a' | NULL                            | '04a airport'
+        '05a'   | 'city05a' | 'COUNTRY'                       | '05a airport'
+        '06a'   | 'city06a' | 'AL'                            | NULL
+        '07a'   | 'city07a' | 'Province, Country, Continent'  | '07a airport'
+    {% endcall %}
+{% endcall %}
+
+
+
+------------------------------------------------------------
+Implementation: Carrier Code Data Contract
+------------------------------------------------------------
+
+  - name: slv_carrier
+    config:
+      contract:
+        enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'carrier_code')
+    columns:
+      - name: code
+        data_type: character varying(8)
+        tests:
+          - not_null
+
+
+------------------------------------------------------------
+Implementation: Carrier Code Pre-Check
+------------------------------------------------------------
+
+- name: carrier_code
+        tags: ['precheck']
+        columns:
+          - name: code
+            tests: 
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+
+
+
+------------------------------------------------------------
+Implementation: Carrier Code Initial model and unit test (FAIL)
+------------------------------------------------------------
+{{
+    config(
+        tags=['unit-test', 'no-db-dependency']
+    )
+}}
+
+-- 05c: is this an error, or is this valid?  That's the question!
+
+{% call dbt_unit_testing.test('slv_carrier', 'validates parsing logic for carrier code data') %}
+
+    {% call dbt_unit_testing.mock_source ('demo_source','carrier_code') %}
+        CODE 
+        '01a'
+        '01b '
+        ' 01c'
+        ''
+        '   '
+
+    {% endcall %}
+
+    {% call dbt_unit_testing.expect() %}
+        CODE    
+        '01a'
+        '01b'
+        '01c'   
+ 
+    {% endcall %}
+{% endcall %}
+
+
+
+
+{{ config(materialized='view', alias='carrier', schema='silver') }}
+
+SELECT
+    code
+FROM {{ source('demo_source', 'carrier_code')}}
+
+
+------------------------------------------------------------
+Implementation: Carrier Code Initial model and unit test (PASSING)
+------------------------------------------------------------
+
+{{ config(materialized='view', alias='carrier', schema='silver') }}
+
+SELECT
+    TRIM(code) as code
+FROM {{ source('demo_source', 'carrier_code')}}
+WHERE
+    TRIM(code) != ''
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select slv_carrier
+
+
+------------------------------------------------------------
+Implementation: Carrier Code other DQ checks
+------------------------------------------------------------
+
+  - name: slv_carrier
+    config:
+      contract:
+        enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'carrier_code')
+            compare_row_condition: "TRIM(code) != ''"
+    columns:
+      - name: code
+        data_type: character varying(8)
+        tests:
+          - not_null
+
+
+------------------------------------------------------------
+Implementation: REGRESSION TEST
+------------------------------------------------------------
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
+
+
+------------------------------------------------------------
+Implementation: Carrier Name Data Contract
+------------------------------------------------------------
+
+      - name: name
+        data_type: character varying (128)
+        tests:
+          - not_null
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select slv_carrier
+
+------------------------------------------------------------
+Implementation: Carrier Name Pre-Check
+------------------------------------------------------------
+
+          - name: description
+            tests: 
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+
+
+
+------------------------------------------------------------
+Implementation: Carrier Name Initial model and unit test (FAIL)
+------------------------------------------------------------
+{{
+    config(
+        tags=['unit-test', 'no-db-dependency']
+    )
+}}
+
+-- 05c: is this an error, or is this valid?  That's the question!
+
+{% call dbt_unit_testing.test('slv_carrier', 'validates parsing logic for carrier code data') %}
+
+    {% call dbt_unit_testing.mock_source ('demo_source','carrier_code') %}
+        CODE    | DESCRIPTION
+        '01a'   | 'carrier 01a (2016 - 2020)'
+        '01b '  | 'carrier 01b (other) (2016 - 2020)'
+        ' 02a'  | 'carrier 02a ( - 2020)'
+        '03a'   | 'carrier 03a (2016 - )'
+        '04a'   | 'carrier 04a ( - )'
+        '05a'   | 'carrier 05a 2016 - 2020)'
+        '05b'   | 'carrier 05b (2016 - 2020'
+        '05c'   | 'carrier 05c ()'
+        '05d'   | 'carrier 05d'
+        ''      | 'value does not matter'
+        '   '   | 'value does not matter'
+
+    {% endcall %}
+
+    {% call dbt_unit_testing.expect() %}
+        CODE    | NAME                      
+        '01a'   | 'carrier 01a'             
+        '01b'   | 'carrier 01b (other)'     
+        '02a'   | 'carrier 02a'             
+        '03a'   | 'carrier 03a'             
+        '04a'   | 'carrier 04a'             
+        '05a'   | 'carrier 05a 2016 - 2020)'
+        '05b'   | 'carrier 05b (2016 - 2020'
+        '05c'   | 'carrier 05c ()'          
+        '05d'   | 'carrier 05d'                
+ 
+    {% endcall %}
+{% endcall %}
+
+
+
+
+{{ config(materialized='view', alias='carrier', schema='silver') }}
+
+SELECT
+    TRIM(code) AS code,
+    description AS name
+FROM {{ source('demo_source', 'carrier_code')}}
+WHERE
+    TRIM(code) != ''
+
+
+------------------------------------------------------------
+Implementation: Carrier Name Initial model and unit test (PASSING)
+------------------------------------------------------------
+
+{{ config(materialized='view', alias='carrier', schema='silver') }}
+
+WITH 
+parsedDescriptionCTE AS (
+    SELECT 
+        TRIM(code) AS code,
+        description AS originalDescription,
+        CASE
+		WHEN
+			POSITION('(' IN REVERSE(description)) < POSITION(')' IN REVERSE(description))
+			OR
+			POSITION(')' IN REVERSE(description)) = 0
+            OR
+            POSITION('(' IN REVERSE(description)) = 0  
+		THEN NULL
+		ELSE
+			TRIM(
+				SUBSTRING(description FROM 
+					LENGTH(description) - POSITION('(' IN REVERSE(description)) + 2
+					FOR
+					  POSITION('(' IN REVERSE(description))
+					  - POSITION(')' IN REVERSE(description)) - 1))
+        END AS yearRange,
+        TRIM(SUBSTRING(description FOR LENGTH(description) - POSITION('(' IN REVERSE(description)) - 1))
+            AS name
+    FROM {{ source('demo_source', 'carrier_code')}}
+    WHERE
+        TRIM(code) != ''
+)
+
+SELECT 
+    CASE WHEN code = '' THEN NULL ELSE code END AS code,
+    CASE WHEN name = '' THEN NULL 
+        ELSE 
+            CASE WHEN yearRange IS NULL OR TRIM(SPLIT_PART(yearRange, '-', 1)) = yearRange THEN originalDescription ELSE name END
+        END AS name
+FROM parsedDescriptionCTE
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select slv_carrier
+
+
+------------------------------------------------------------
+Implementation: Carrier Code other DQ checks
+------------------------------------------------------------
+
+?? NOT NEEDED -- no need to check for empty string because the code itself sets it to NULL
+
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+                min_value: 1
+                strictly: false
+
+
+------------------------------------------------------------
+Implementation: REGRESSION TEST
+------------------------------------------------------------
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
+
+
+------------------------------------------------------------
+Implementation: Define data contract for effectiveFromYear
+------------------------------------------------------------
+
+- name: effectiveFromYear
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1900
+              max_value: 9999
+              row_condition: "effectiveFromYear IS NOT NULL AND effectiveFromYear != -1"
+              strictly: false
+
+
+------------------------------------------------------------
+Implementation: Add Unit Tests for effectiveFromYear
+------------------------------------------------------------
+
+
+{{
+    config(
+        tags=['unit-test', 'no-db-dependency']
+    )
+}}
+
+-- 05c: is this an error, or is this valid?  That's the question!
+
+{% call dbt_unit_testing.test('slv_carrier', 'validates parsing logic for carrier code data') %}
+
+    {% call dbt_unit_testing.mock_source ('demo_source','carrier_code') %}
+        CODE    | DESCRIPTION                        
+        '01a'   | 'carrier 01a (2016 - 2020)'        
+        '01b '  | 'carrier 01b (other) (2016 - 2020)'
+        ' 02a'  | 'carrier 02a ( - 2020)'            
+        '03a'   | 'carrier 03a (2016 - )'            
+        '04a'   | 'carrier 04a ( - )'                
+        '05a'   | 'carrier 05a 2016 - 2020)'         
+        '05b'   | 'carrier 05b (2016 - 2020'         
+        '05c'   | 'carrier 05c ()'                   
+        '05d'   | 'carrier 05d'                      
+        ''      | 'value does not matter'            
+        '   '   | 'value does not matter'            
+
+    {% endcall %}
+
+    {% call dbt_unit_testing.expect() %}
+        CODE    | NAME                          | effectiveFromYear
+        '01a'   | 'carrier 01a'                 | 2016
+        '01b'   | 'carrier 01b (other)'         | 2016
+        '02a'   | 'carrier 02a'                 | NULL
+        '03a'   | 'carrier 03a'                 | 2016
+        '04a'   | 'carrier 04a'                 | NULL
+        '05a'   | 'carrier 05a 2016 - 2020)'    | -1
+        '05b'   | 'carrier 05b (2016 - 2020'    | -1
+        '05c'   | 'carrier 05c ()'              | -1
+        '05d'   | 'carrier 05d'                 | -1
+ 
+    {% endcall %}
+{% endcall %}
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select slv_carrier
+
+------------------------------------------------------------
+Implementation: Implement Model for effectiveFromYear
+------------------------------------------------------------
+
+CAST(
+        CASE
+            WHEN yearRange IS NULL or TRIM(SPLIT_PART(yearRange, '-', 1)) = yearRange THEN -1
+            WHEN TRIM(SPLIT_PART(yearRange, '-', 1)) = ''
+            THEN NULL
+            ELSE CAST(TRIM(SPLIT_PART(yearRange, '-', 1)) AS INTEGER)
+            END
+        AS INTEGER) AS effectiveFromYear
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select slv_carrier
+
+
+------------------------------------------------------------
+Implementation: REGRESSION TEST
+------------------------------------------------------------
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
+
+
+
+------------------------------------------------------------
+Implementation: Define data contract for effectiveToYear
+------------------------------------------------------------
+
+      - name: effectiveToYear
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1900
+              max_value: 9999
+              row_condition: "effectiveToYear IS NOT NULL AND effectiveToYear != -1"
+              strictly: false
+
+
+------------------------------------------------------------
+Implementation: Add Unit Tests for effectiveToYear
+------------------------------------------------------------
+
+
+{{
+    config(
+        tags=['unit-test', 'no-db-dependency']
+    )
+}}
+
+-- 05c: is this an error, or is this valid?  That's the question!
+
+    {% call dbt_unit_testing.expect() %}
+        CODE    | NAME                          | effectiveFromYear | effectiveToYear
+        '01a'   | 'carrier 01a'                 | 2016              | 2020
+        '01b'   | 'carrier 01b (other)'         | 2016              | 2020
+        '02a'   | 'carrier 02a'                 | NULL              | 2020
+        '03a'   | 'carrier 03a'                 | 2016              | NULL
+        '04a'   | 'carrier 04a'                 | NULL              | NULL
+        '05a'   | 'carrier 05a 2016 - 2020)'    | -1                | -1
+        '05b'   | 'carrier 05b (2016 - 2020'    | -1                | -1
+        '05c'   | 'carrier 05c ()'              | -1                | -1
+        '05d'   | 'carrier 05d'                 | -1                | -1
+ 
+    {% endcall %}
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select slv_carrier
+
+------------------------------------------------------------
+Implementation: Implement Model for effectiveToYear
+------------------------------------------------------------
+
+    CAST(
+        CASE
+            WHEN yearRange IS NULL or TRIM(SPLIT_PART(yearRange, '-', 2)) = yearRange THEN -1
+            WHEN TRIM(SPLIT_PART(yearRange, '-', 2)) = ''
+            THEN NULL
+            ELSE CAST(TRIM(SPLIT_PART(yearRange, '-', 2)) AS INTEGER)
+            END
+        AS INTEGER) AS effectiveToYear
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select slv_carrier
+
+
+------------------------------------------------------------
+Implementation: REGRESSION TEST
+------------------------------------------------------------
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
+
+
+
+------------------------------------------------------------
+Implementation: Define data contract for originalDescription
+------------------------------------------------------------
+
+      - name: originalDescription
+        data_type: character varying (128)
+        tests:
+          - not_null
+
+
+------------------------------------------------------------
+Implementation: Add Unit Tests for originalDescription
+------------------------------------------------------------
+
+
+    {% call dbt_unit_testing.expect() %}
+        CODE    | NAME                          | effectiveFromYear | effectiveToYear   | originalDescription
+        '01a'   | 'carrier 01a'                 | 2016              | 2020              | 'carrier 01a (2016 - 2020)' 
+        '01b'   | 'carrier 01b (other)'         | 2016              | 2020              | 'carrier 01b (other) (2016 - 2020)'
+        '02a'   | 'carrier 02a'                 | NULL              | 2020              | 'carrier 02a ( - 2020)' 
+        '03a'   | 'carrier 03a'                 | 2016              | NULL              | 'carrier 03a (2016 - )'
+        '04a'   | 'carrier 04a'                 | NULL              | NULL              | 'carrier 04a ( - )'
+        '05a'   | 'carrier 05a 2016 - 2020)'    | -1                | -1                | 'carrier 05a 2016 - 2020)'         
+        '05b'   | 'carrier 05b (2016 - 2020'    | -1                | -1                | 'carrier 05b (2016 - 2020'         
+        '05c'   | 'carrier 05c ()'              | -1                | -1                | 'carrier 05c ()'                   
+        '05d'   | 'carrier 05d'                 | -1                | -1                | 'carrier 05d'                      
+ 
+    {% endcall %}
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select slv_carrier
+
+------------------------------------------------------------
+Implementation: Implement Model for originalDescription
+------------------------------------------------------------
+
+originalDescription
+
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select slv_carrier
+
+
+------------------------------------------------------------
+Implementation: REGRESSION TEST
+------------------------------------------------------------
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
+
+
+------------------------------------------------------------
+Implementation: FIX DATA TYPES IN CONFIG AND MODEL
+------------------------------------------------------------
+
+version: 2
+
+models:
+  - name: slv_airport
+    config:
+      contract:
+        enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'airport_code')
+            compare_row_condition: "code != 'ZZZ'"
+    columns:
+      - name: code
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - unique
+          - dbt_expectations.expect_column_values_to_not_be_in_set:
+              value_set: ['ZZZ', 'zzz']
+              quote_values: true # (Optional. Default is 'true'.)
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+                min_value: 1
+                strictly: false
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
+      - name: name
+        data_type: character varying(128)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "[[:alnum:]]+"
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+      - name: city  # Need a unit test for "description does not have a comma"
+        data_type: character varying(32)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "[[:alnum:]]+"
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+      - name: state_country
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_in_type_list:
+              column_type_list: [character varying, text]
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: "[[:alnum:]]+"
+  - name: slv_carrier
+    config:
+      contract:
+        enforced: true
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+            compare_model: source('demo_source', 'carrier_code')
+            compare_row_condition: "TRIM(code) != ''"
+    columns:
+      - name: code
+        data_type: character varying(8)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
+      - name: name
+        data_type: character varying (128)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+                min_value: 1
+                strictly: false
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
+      - name: effectiveFromYear
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1900
+              max_value: 9999
+              row_condition: "effectiveFromYear IS NOT NULL AND effectiveFromYear != -1"
+              strictly: false
+      - name: effectiveToYear
+        data_type: integer
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1900
+              max_value: 9999
+              row_condition: "effectiveToYear IS NOT NULL AND effectiveToYear != -1"
+              strictly: false
+      - name: originalDescription
+        data_type: character varying (128)
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_of_type:
+              column_type: character varying
+
+
+SELECT 
+    CAST(CASE WHEN code = '' THEN NULL ELSE code END AS character varying (8)) AS code,
+    CAST(
+        CASE WHEN name = '' THEN NULL 
+            ELSE 
+                CASE WHEN yearRange IS NULL OR TRIM(SPLIT_PART(yearRange, '-', 1)) = yearRange THEN originalDescription ELSE name END
+        END AS CHARACTER VARYING (128))
+        AS name,
+    CAST(
+        CASE
+            WHEN yearRange IS NULL or TRIM(SPLIT_PART(yearRange, '-', 1)) = yearRange THEN -1
+            WHEN TRIM(SPLIT_PART(yearRange, '-', 1)) = ''
+            THEN NULL
+            ELSE CAST(TRIM(SPLIT_PART(yearRange, '-', 1)) AS INTEGER)
+        END
+        AS INTEGER) AS effectiveFromYear,
+    CAST(
+        CASE
+            WHEN yearRange IS NULL or TRIM(SPLIT_PART(yearRange, '-', 2)) = yearRange THEN -1
+            WHEN TRIM(SPLIT_PART(yearRange, '-', 2)) = ''
+            THEN NULL
+            ELSE CAST(TRIM(SPLIT_PART(yearRange, '-', 2)) AS INTEGER)
+            END
+        AS INTEGER) AS effectiveToYear,
+    CAST(originalDescription AS CHARACTER VARYING (128))
+FROM parsedDescriptionCTE
+
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select slv_carrier
+
+------------------------------------------------------------
+Implementation: REGRESSION TEST
+------------------------------------------------------------
+
+> DBT_PASSWORD=`cat ~/complicated` dbt test --select tag:precheck
+> DBT_PASSWORD=`cat ~/complicated` dbt build --select tag:demo
