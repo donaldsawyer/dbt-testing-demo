@@ -3,5 +3,4 @@ version: 2
 sources:
   - name: demo_source
     schema: 'bronze'
-    tables:
-      - name: carrier_code
+

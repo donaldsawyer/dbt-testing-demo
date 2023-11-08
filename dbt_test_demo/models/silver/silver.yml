@@ -1,7 +1,3 @@
 version: 2
 
 models:
-  - name: slv_carrier
-    config: 
-      contract:
-        enforced: true
